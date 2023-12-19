@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# #####################################################################
+# start_container_main
+#
+# Details: Start the docker container
+# Date: 2023-05-11
+# Version: 5.11
+#
+# #####################################################################
+
+start_container_main () {
+    /usr/local/bin/start-ipfs
+    log-msg "ipfs [STARTED]" "container"
+    /usr/bin/life-line
+}
+
+start_container_main

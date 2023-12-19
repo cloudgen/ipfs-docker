@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# #####################################################################
+# filename
+#
+# Details: Get filename from path
+# Date: 2022-09-30
+# Version: 1.0
+#
+# Environment: 
+# Input: PATH
+# Output: string
+#
+# Required:
+#
+# Note: 
+#   1. we use the function filename_main instead of filename to 
+#      avoid the conflict with the filename (/usr/local/bin/filename)
+# #####################################################################
+filename_main () {
+    echo "$1"|rev|cut -d/ -f1|rev
+}
+
+filename_main "$1"

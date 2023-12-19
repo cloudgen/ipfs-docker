@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# #####################################################################
+# log_msg_main
+# Details: Display and log the message to both stdout and
+#          exposed log folder
+# Date: 2022-09-30
+# Version: 1.0
+#
+# Environment:
+# Input: msg, EXPOSED_LOG_NAME, EXPOSED_LOG_FOLDER
+# Output:
+#
+# Required:
+#   log-file
+#   log-filename (from log-file)
+# Note:
+#   1. we use the function log_msg_main instead of log_msg to 
+#      avoid the conflict with the filename (/usr/local/bin/log-msg)
+# #####################################################################
+
+log_msg_main () {
+    if [ ! -z "$1" ]; then
+        local msg="$1"
+    fi
+    if [ ! -z "$2" ]; then
+        local EXPOSED_LOG_NAME="$2"
+    fi
+    if [ ! -z "$3" ]; then
+        local EXPOSED_LOG_FOLDER="$3"
+    	local LOG=$(log-file "${EXPOSED_LOG_NAME}" "${EXPOSED_LOG_FOLDER}")
+    elif [ ! -z "${EXPOSED_LOG_FOLDER}" ]; then
+    	local LOG=$(log-file "${EXPOSED_LOG_NAME}" "${EXPOSED_LOG_FOLDER}")
+    else
+        local EXPOSED_LOG_FOLDER=/data/log/${EXPOSED_LOG_NAME}
+        local LOG=$(log-file "${EXPOSED_LOG_NAME}")
+    fi
+    local T=$(date +%Y-%m-%d_%T)
+    echo "$T :] ${msg}"
+    if [ ! -z "LOG" ]; then
+        mkdir -p ${EXPOSED_LOG_FOLDER}
+        echo "$T ${EXPOSED_LOG_NAME} :] ${msg}" >> ${LOG}
+    fi
+}
+
+log_msg_main "$1" "$2" "$3"

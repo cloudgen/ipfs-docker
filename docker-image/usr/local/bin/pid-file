@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# #####################################################################
+# pid_file_main 
+# Details: get the path fo the pid file  
+# Date: 2022-10-05
+# Version: 1.0
+#
+# Environment: 
+# Input: APPNAME
+# Output: 
+#
+# Required: 
+#
+# Note: 
+#   1. we use the function pid_file_main instead of pid_file to 
+#      avoid the conflict with the filename (/usr/local/bin/pid-file)
+# #####################################################################
+pid_file_main () {
+    if [ ! -z "$1" ]; then
+        local APPNAME="$1"
+    fi
+    if [ ! -z "${APPNAME}" ]; then
+        local PID_FOLDER=/var/run
+        mkdir -p ${PID_FOLDER}
+        echo ${PID_FOLDER}/${APPNAME}.pid
+    else
+        echo ""
+    fi
+}
+
+pid_file_main "$1"

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+
+# #####################################################################
+# stop_ipfs_main
+# Details: Stop the ipfs by identified by /var/run/ipfs.pid
+# Date: 2022-10-07
+# #####################################################################
+stop_ipfs_main () {
+    local EXPOSED_LOG_NAME=ipfs
+    sync-log ${EXPOSED_LOG_NAME}
+    local PID_FILE=$(pid-file ${EXPOSED_LOG_NAME})
+    if [ -f "${PID_FILE}" ]; then
+        local PID=$(cat ${PID_FILE})
+        kill -9 ${PID}
+        log-msg "IPFS (PID=${PID}) [KILLED]" "${EXPOSED_LOG_NAME}"
+    fi
+}
+
+stop_ipfs_main

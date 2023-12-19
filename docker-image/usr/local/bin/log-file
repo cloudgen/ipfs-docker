@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# #####################################################################
+# log_file_main
+# Details: get the path of the current log
+# Date: 2022-09-30
+# Version: 1.0
+#
+# Environment:
+# Input: EXPOSED_LOG_NAME, EXPOSED_LOG_FOLDER
+# Output:
+#
+# Required:
+#   log-filename
+# Note:
+#   1. we use the function log_file_main instead of log_file to
+#      avoid the conflict with the filename (/usr/local/bin/log-file)
+# #####################################################################
+log_file_main () {
+    if [ ! -z "$1" ]; then
+        local EXPOSED_LOG_NAME="$1"
+    fi
+    if [ ! -z "$2" ]; then
+        local EXPOSED_LOG_FOLDER="$2"
+    elif [ -z "${EXPOSED_LOG_FOLDER}" ] && [ ! -z "${EXPOSED_LOG_NAME}" ]; then
+        local EXPOSED_LOG_FOLDER=/data/log/${EXPOSED_LOG_NAME}
+    fi
+    echo ${EXPOSED_LOG_FOLDER}/$(log-filename ${EXPOSED_LOG_NAME})
+}
+
+log_file_main "$1" "$2"

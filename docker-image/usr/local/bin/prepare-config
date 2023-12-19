@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# #####################################################################
+# prepare_config_main
+#
+# Details: Prepare configuration file from init folder
+# Date: 2022-09-30
+# Version: 1.0
+#
+# Environment:
+# Input: CONFIG_NAME, CONFIG_FOLDER, INIT_FOLDER, INITED
+# Output:
+#
+# Required:
+#   log-msg,
+#   log-file (from log-msg)
+#   log-filename (from log-msg)
+#
+# Note:
+#   1. we use the function prepare_config_main instead of prepare_config to 
+#      avoid the conflict with the filename (/usr/local/bin/prepare-config)
+#   2. Remember to use "source prepare-config ${APP_NAME}"
+# #####################################################################
+prepare_config_main () {
+    if [ ! -z "$1" ]; then
+        local CONFIG_NAME="$1"
+        local CONFIG_FILE="$1.conf"
+    fi
+    if [ ! -z "$2" ]; then
+        local CONFIG_FOLDER="$2"
+    elif [ -z "$CONFIG_FOLDER" ]  && [ ! -z "$CONFIG_NAME" ]; then
+        local CONFIG_FOLDER=/data/${CONFIG_NAME}
+    fi
+    if [ ! -z "$3" ]; then
+        local INIT_FOLDER="$3"
+    elif [ -z "$INIT_FOLDER" ] && [ ! -z "$CONFIG_NAME" ]; then
+        local INIT_FOLDER=/root/.init/${CONFIG_NAME}
+    fi
+    if [ ! -z "$4" ]; then
+        local INITED="$4"
+    elif [ -z "${INITED}" ]; then
+        local INITED=".inited"
+    fi
+
+    if [ ! -f ${CONFIG_FOLDER}/${INITED} ]; then
+        mkdir -p ${CONFIG_FOLDER}
+        cp ${INIT_FOLDER}/${CONFIG_FILE} ${CONFIG_FOLDER}
+        touch ${CONFIG_FOLDER}/${INITED}
+        log-msg "Configuration file: ${CONFIG_FOLDER}/${INITED} [INITED]" "${EXPOSED_LOG_NAME}"
+    fi
+    if [ -f  ${CONFIG_FOLDER}/${CONFIG_FILE} ]; then
+        source ${CONFIG_FOLDER}/${CONFIG_FILE} 
+    else
+        log-msg "Configuration file: ${CONFIG_FOLDER}/${CONFIG_FILE} [NOT FOUND]" "${EXPOSED_LOG_NAME}"
+    fi
+}
+
+prepare_config_main "$1" "$2" "$3" "$4"

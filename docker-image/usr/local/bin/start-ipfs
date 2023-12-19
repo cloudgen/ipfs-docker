@@ -1,0 +1,56 @@
+#!/bin/sh
+
+# #####################################################################
+# prepare_config 
+# Details: Prepare configuration 
+# Date: 2022-09-27
+# #####################################################################
+prepare_config () {
+    if [ -z "$(ls -A $IPFS_PATH 2> /dev/null)" ]; then
+        /usr/sbin/ipfs init
+        /usr/sbin/ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+        /usr/sbin/ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
+        /usr/sbin/ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
+        /usr/sbin/ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'
+        log-msg "IPFS initied." "${EXPOSED_LOG_NAME}"
+    fi
+}
+
+# #####################################################################
+# ipfs_daemon 
+# Details: run ipfs daemon  
+# Date: 2022-09-27
+# #####################################################################
+ipfs_daemon () {
+    if [ -f ${IPFS_PATH}/config ]; then
+        log-msg "IPFS_PATH=${IPFS_PATH}, staring IPFS with following messages..." "${EXPOSED_LOG_NAME}"
+        log-msg "############################" "${EXPOSED_LOG_NAME}"
+        cd ${EXPOSED_LOG_FOLDER} && nohup /usr/sbin/ipfs daemon --enable-namesys-pubsub 2>&1 >> $(log-file "${EXPOSED_LOG_NAME}") &
+        sleep 5
+        log-msg "############################"  "${EXPOSED_LOG_NAME}"
+        local PID=$(ps aux | grep -v grep| grep ipfs|grep daemon|awk '{print $1}')
+        log-msg "IPFS started. PID: ${PID}" "${EXPOSED_LOG_NAME}"
+        echo ${PID} > /var/run/ipfs.pid
+  rm -rf   else
+        log-msg "Missing IPFS config. Failed to start!" "${EXPOSED_LOG_NAME}"
+    fi
+}
+
+# #####################################################################
+# start_ipfs_main 
+# Details: the main process for start-ipfs  
+# Date: 2022-09-28
+# #####################################################################
+start_ipfs_main () {
+    local INITED=.inited
+    export IPFS_PATH=/data/ipfs
+    local EXPOSED_LOG_NAME=ipfs
+    local EXPOSED_LOG_FOLDER=/data/log/ipfs
+    mkdir -p /data/ipfs
+    log-msg "" "${EXPOSED_LOG_NAME}"
+    sync-log ${EXPOSED_LOG_NAME}
+    prepare_config
+    ipfs_daemon
+}
+
+start_ipfs_main

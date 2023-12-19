@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# #####################################################################
+# log_filename_main
+# Details: get the file name of the current log with date
+# Date: 2022-09-30
+# Version: 1.0
+#
+# Environment:
+# Input: EXPOSED_LOG_NAME
+# Output: string
+#
+# Required:
+#
+# Note:
+#   1. we use the function log_filename_main instead of log_filename to
+#      avoid the conflict with the filename (/usr/local/bin/log-filename)
+# #####################################################################
+log_filename_main () {
+    if [ ! -z "$1" ]; then
+        local EXPOSED_LOG_NAME="$1"
+    fi
+    local D=$(date +%Y-%m-%d)
+    echo ${EXPOSED_LOG_NAME}.$D.log
+}
+
+log_filename_main "$1"

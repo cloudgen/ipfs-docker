@@ -1,0 +1,94 @@
+#!/bin/sh
+
+# #####################################################################
+# sync_log_main
+#
+# Details: Create ${INITED} file to ensure initialization process completed.
+# Date: 2022-10-06
+# Version: 1.1
+#
+# Environment:
+# Input: EXPOSED_LOG_NAME, EXPOSED_LOG_FOLDER, VAR_LOG, INITED
+# Output:
+#
+# Required:
+#   filename,
+#   log-msg,
+#   log-file (from log-msg),
+#   log-filename (from log-msg)
+#
+# Note:
+#   1. we use the function sync_log_main instead of sync_log to
+#      avoid the conflict with the filename (/usr/local/bin/sync-log)
+#   2. Restart the docker once to create sym links (.inited)
+# #####################################################################
+
+sync_log_main () {
+    # The log folder should be placed under exposed folder
+    # If the exposed folder has been overrided and ${INITED} lost,
+    #    the sync process will run again
+    # E.g.
+    #   sync-log ${EXPOSED_LOG_NAME} ${EXPOSED_LOG_FOLDER}  ${VAR_LOG} ${INITED}
+
+    if [ ! -z "$1" ]; then
+        local EXPOSED_LOG_NAME="$1"
+    fi 
+    if [ ! -z "$2" ]; then
+        local EXPOSED_LOG_FOLDER="$2"
+    elif [ -z "$EXPOSED_LOG_FOLDER" ]  && [ ! -z "$EXPOSED_LOG_NAME" ]; then
+        local EXPOSED_LOG_FOLDER=/data/log/${EXPOSED_LOG_NAME}
+    fi
+    if [ ! -z "$3" ]; then
+        local VAR_LOG="$3"
+    elif [ -z "$VAR_LOG" ] && [ ! -z "$EXPOSED_LOG_NAME" ]; then
+        local VAR_LOG=/var/log/${EXPOSED_LOG_NAME}
+    fi
+    if [ ! -z "$4" ]; then
+        local INITED="$4"
+    elif [ -z "${INITED}" ]; then
+        local INITED=".inited"
+    fi
+    mkdir -p ${EXPOSED_LOG_FOLDER}
+    mkdir -p ${VAR_LOG}
+    echo "Checking inited file: \"${EXPOSED_LOG_FOLDER}/${INITED}\""
+    if [ ! -f ${EXPOSED_LOG_FOLDER}/${INITED} ]; then
+        for LOG_FILE in ${VAR_LOG}/*; do
+            if [ -f ${LOG_FILE} ]; then
+                local FILE_NAME=$(filename ${LOG_FILE})
+                if [ ! -f ${EXPOSED_LOG_FOLDER}/${FILE_NAME} ]; then
+                    cp ${VAR_LOG}/${FILE_NAME}  ${EXPOSED_LOG_FOLDER}
+                fi
+            fi
+        done
+        for LOG_FILE in ${EXPOSED_LOG_FOLDER}/*; do
+            if [ -f ${LOG_FILE} ]; then
+                local FILE_NAME=$(filename ${LOG_FILE})
+                cp ${EXPOSED_LOG_FOLDER}/${FILE_NAME} ${VAR_LOG}
+            fi
+        done
+        touch ${EXPOSED_LOG_FOLDER}/${INITED}
+        log-msg "Log system inited. ${EXPOSED_LOG_FOLDER}/${INITED} created!" "${EXPOSED_LOG_NAME}"
+    else
+        for LOG_FILE in ${VAR_LOG}/*; do
+            if [ -f ${LOG_FILE} ]; then
+                local FILE_NAME=$(filename ${LOG_FILE})
+                if [ ! -f ${EXPOSED_LOG_FOLDER}/${FILE_NAME} ]; then
+                    cp ${VAR_LOG}/${FILE_NAME}  ${EXPOSED_LOG_FOLDER}
+                fi
+            fi
+        done
+        for LOG_FILE in ${EXPOSED_LOG_FOLDER}/*; do
+            if [ -f ${LOG_FILE} ]; then
+                local FILE_NAME=$(filename ${LOG_FILE})
+                if [ ${FILE_NAME} != ${INITED} ]; then
+                    if [ -f ${VAR_LOG}/${FILE_NAME} ]; then
+                        rm ${VAR_LOG}/${FILE_NAME}
+                    fi
+                    ln -s ${EXPOSED_LOG_FOLDER}/${FILE_NAME} ${VAR_LOG}
+                fi
+            fi
+        done
+    fi
+}
+
+sync_log_main "$1" "$2" "$3" "$4"
